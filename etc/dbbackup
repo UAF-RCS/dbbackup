@@ -1,5 +1,5 @@
-OUTDIR="/var/dbbackups"
-DATABASE="jiradb"
-ACCOUNT="backup"
-PASS=""
+TYPE="postgres"
+USER="backup"
+HOST="127.0.0.1"
+OUTDIR="/var/local/dbbackups"
 

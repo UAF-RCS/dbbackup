@@ -1,0 +1,36 @@
+#!/bin/bash
+#
+# backup a mysql or postgresql database
+# rotate thru a week of auto backups
+# https://github.alaska.edu/UAF-RCS/dbbackup
+
+# set some variables
+if [ $DEBUG == "true" ]; then set -x; fi
+DAY=`date +%w`
+TYPE="postgres" # default to postgresql
+. /usr/local/etc/dbbackup
+
+# parse cmdline
+
+# determine backup command
+case $TYPE in
+mysql)
+  DBDUMP=`which mysqldump`
+  ;;
+postgres)
+  DBDUMP=`which pg_dump`
+  ;;
+*)
+  echo "Sorry; don't know that DB type."
+  exit 1
+esac
+
+# create uncompressed dump file
+$DBDUMP $DATABASE > ${OUTFILE}.${DAY}
+ls -l ${OUTFILE}.${DAY}
+
+# compress dump file, replaces file from 7 days ago
+rm ${OUTFILE}.${DAY}.gz
+gzip ${OUTFILE}.${DAY}
+ls -l ${OUTFILE}.${DAY}.gz
+

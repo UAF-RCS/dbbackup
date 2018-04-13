@@ -1,0 +1,5 @@
+OUTDIR="/var/dbbackups"
+DATABASE="jiradb"
+ACCOUNT="backup"
+PASS=""
+

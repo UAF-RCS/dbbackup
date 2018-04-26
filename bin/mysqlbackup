@@ -11,12 +11,10 @@ usage() {
 # set some variables
 if [ $DEBUG == "true" ]; then set -x; fi
 DAY=`date +%w`
+DBCMD=`which mysql`
+DBDUMP=`which mysqldump`
 . /usr/local/etc/mysqlbackup
-
-# set default dump file name
-if [ ":$OUTFILE:" == "::" ]; then 
-  OUTFILE="$OUTDIR/${type}Dump"
-fi
+OUTFILE="$OUTDIR/mysqlDump"
 
 # parse cmdline
 while getopts "h?F:H:P:U:" opt; do
@@ -39,13 +37,7 @@ while getopts "h?F:H:P:U:" opt; do
 done
 shift "$((OPTIND-1))"
 
-# configure proper cmds & cmdline options
-DBCMD=`which mysql`
-DBDUMP=`which mysqldump`
-OPTS="-ANe"
-SQL="SELECT schema_name FROM information_schema.schemata \
-  WHERE schema_name NOT IN \
-  ('mysql', 'information_schema', 'performance_schema')"
+# set connection string
 CONNECTION="-h $HOST -P $PORT -u $USER"
 
 # get list of databases to dump

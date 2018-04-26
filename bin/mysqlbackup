@@ -4,6 +4,10 @@
 # rotate thru a week of backups
 # https://github.alaska.edu/UAF-RCS/dbbackup
 
+usage() { 
+  echo "usage: $(basename $0) [-h?] [-F dumpfile] [-H host] [-P port] [-U user]" >&2 
+}
+
 # set some variables
 if [ $DEBUG == "true" ]; then set -x; fi
 DAY=`date +%w`
@@ -13,8 +17,6 @@ DAY=`date +%w`
 if [ ":$OUTFILE:" == "::" ]; then 
   OUTFILE="$OUTDIR/${type}Dump"
 fi
-
-usage() { echo "usage: $(basename $0) [-h?] [-F dumpfile] [-H host] [-P port] [-U user]" >&2; }
 
 # parse cmdline
 while getopts "h?F:H:P:U:" opt; do

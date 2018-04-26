@@ -1,0 +1,55 @@
+#!/bin/bash
+#
+# backup a mysql or postgresql database
+# rotate thru a week of auto backups
+# https://github.alaska.edu/UAF-RCS/dbbackup
+
+# set some variables
+if [ $DEBUG == "true" ]; then set -x; fi
+DAY=`date +%w`
+. /usr/local/etc/dbbackup
+
+# parse cmdline
+
+# set dump file name if not specified on cmdline
+if [ ":$OUTFILE:" == "::" ]; then 
+  OUTFILE="$OUTDIR/${type}Dump"
+fi
+
+# determine proper cmds & cmdline options
+case $TYPE in
+mysql)
+  DBCMD=`which mysql`
+  DBDUMP=`which mysqldump`
+  OPTS="-ANe"
+  SQL="SELECT schema_name FROM information_schema.schemata \
+    WHERE schema_name NOT IN \
+    ('mysql', 'information_schema', 'performance_schema')"
+  CONNECTION="-h $HOST -P $PORT -u $USER"
+  ;;
+postgres)
+  DBCMD=`which psql`
+  DBDUMP=`which pg_dump`
+  OPTS=""
+  CONNECTION="-h $HOST -p $PORT -U $USER"
+  SQL="SELECT schema_name FROM information_schema.schemata \
+    WHERE schema_name NOT IN \
+    ('mysql', 'information_schema', 'performance_schema')"
+  ;;
+*)
+  echo "Sorry; don't know that DB type."
+  exit 1
+esac
+
+# get list of databases to dump
+DBLIST=`${DBCMD} ${CONNECTION} ${OPTS}"${SQL}" | tr '\n' ' '`
+
+# create uncompressed dump file
+${DBDUMP} ${CONNECTION} --databases ${DBLIST} > ${OUTFILE}.${DAY}
+ls -l ${OUTFILE}.${DAY}
+
+# compress dump file, replaces file from 7 days ago
+rm ${OUTFILE}.${DAY}.bz2
+bzip2 ${OUTFILE}.${DAY}
+ls -l ${OUTFILE}.${DAY}.bz2
+

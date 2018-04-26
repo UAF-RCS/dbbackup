@@ -1,45 +1,50 @@
 #!/bin/bash
 #
-# backup a mysql or postgresql database
-# rotate thru a week of auto backups
+# backup a mysql database
+# rotate thru a week of backups
 # https://github.alaska.edu/UAF-RCS/dbbackup
 
 # set some variables
 if [ $DEBUG == "true" ]; then set -x; fi
 DAY=`date +%w`
-. /usr/local/etc/dbbackup
+. /usr/local/etc/mysqlbackup
 
-# parse cmdline
-
-# set dump file name if not specified on cmdline
+# set default dump file name
 if [ ":$OUTFILE:" == "::" ]; then 
   OUTFILE="$OUTDIR/${type}Dump"
 fi
 
-# determine proper cmds & cmdline options
-case $TYPE in
-mysql)
-  DBCMD=`which mysql`
-  DBDUMP=`which mysqldump`
-  OPTS="-ANe"
-  SQL="SELECT schema_name FROM information_schema.schemata \
-    WHERE schema_name NOT IN \
-    ('mysql', 'information_schema', 'performance_schema')"
-  CONNECTION="-h $HOST -P $PORT -u $USER"
-  ;;
-postgres)
-  DBCMD=`which psql`
-  DBDUMP=`which pg_dump`
-  OPTS=""
-  CONNECTION="-h $HOST -p $PORT -U $USER"
-  SQL="SELECT schema_name FROM information_schema.schemata \
-    WHERE schema_name NOT IN \
-    ('mysql', 'information_schema', 'performance_schema')"
-  ;;
-*)
-  echo "Sorry; don't know that DB type."
-  exit 1
-esac
+usage() { echo "usage: $(basename $0) [-h?] [-F dumpfile] [-H host] [-P port] [-U user]" >&2; }
+
+# parse cmdline
+while getopts "h?F:H:P:U:" opt; do
+  case "$OPT" in
+  h|\?) usage
+     exit 0
+     ;;
+  F) OUTFILE=$OPTARG
+     ;;
+  H) HOST=$OPTARG
+     ;;
+  P) PORT=$OPTARG
+     ;;
+  U) USER=$OPTARG
+     ;;
+  *) usage
+     exit 1
+     ;;
+  esac
+done
+shift "$((OPTIND-1))"
+
+# configure proper cmds & cmdline options
+DBCMD=`which mysql`
+DBDUMP=`which mysqldump`
+OPTS="-ANe"
+SQL="SELECT schema_name FROM information_schema.schemata \
+  WHERE schema_name NOT IN \
+  ('mysql', 'information_schema', 'performance_schema')"
+CONNECTION="-h $HOST -P $PORT -u $USER"
 
 # get list of databases to dump
 DBLIST=`${DBCMD} ${CONNECTION} ${OPTS}"${SQL}" | tr '\n' ' '`
@@ -48,8 +53,7 @@ DBLIST=`${DBCMD} ${CONNECTION} ${OPTS}"${SQL}" | tr '\n' ' '`
 ${DBDUMP} ${CONNECTION} --databases ${DBLIST} > ${OUTFILE}.${DAY}
 ls -l ${OUTFILE}.${DAY}
 
-# compress dump file, replaces file from 7 days ago
-rm ${OUTFILE}.${DAY}.bz2
-bzip2 ${OUTFILE}.${DAY}
+# compress dump file; overwrite file from 7 days ago
+bzip2 -f ${OUTFILE}.${DAY}
 ls -l ${OUTFILE}.${DAY}.bz2
 

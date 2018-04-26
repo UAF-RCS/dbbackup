@@ -17,7 +17,7 @@ DBDUMP=`which mysqldump`
 OUTFILE="$OUTDIR/mysqlDump"
 
 # parse cmdline
-while getopts "h?F:H:P:U:" opt; do
+while getopts "h?F:H:P:U:" OPT; do
   case "$OPT" in
   h|\?) usage
      exit 0

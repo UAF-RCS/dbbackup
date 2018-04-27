@@ -1,8 +1,5 @@
 USER="backup"
 HOST="127.0.0.1"
 OUTDIR="/var/local/dbbackups"
-OPTS="-ANe"
-SQL="SELECT schema_name FROM information_schema.schemata \
-  WHERE schema_name NOT IN \
-  ('mysql', 'information_schema', 'performance_schema')"
+OPTS="-Ne --all-databases"
 

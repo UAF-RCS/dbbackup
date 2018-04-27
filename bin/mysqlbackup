@@ -40,12 +40,8 @@ shift "$((OPTIND-1))"
 # set connection string
 CONNECTION="-h $HOST -P $PORT -u $USER"
 
-# get list of databases to dump
-DBLIST=`${DBCMD} ${CONNECTION} ${OPTS}"${SQL}" | tr '\n' ' '`
-
 # create uncompressed dump file
-${DBDUMP} ${CONNECTION} --databases ${DBLIST} > ${OUTFILE}.${DAY}
-ls -l ${OUTFILE}.${DAY}
+${DBDUMP} ${CONNECTION} ${OPTS} > ${OUTFILE}.${DAY}
 
 # compress dump file; overwrite file from 7 days ago
 bzip2 -f ${OUTFILE}.${DAY}

@@ -1,55 +1,49 @@
 #!/bin/bash
 #
-# backup a mysql or postgresql database
-# rotate thru a week of auto backups
+# backup a postgresql database
+# rotate thru a week of backups
 # https://github.alaska.edu/UAF-RCS/dbbackup
+
+usage() {
+  echo "usage: $(basename $0) [-h?] [-F dumpfile] [-H host] [-P port] -U user]" >&2
+}
 
 # set some variables
 if [ $DEBUG == "true" ]; then set -x; fi
 DAY=`date +%w`
-. /usr/local/etc/dbbackup
+DBCMD=`which psql`
+DBDUMP=`which pg_dumpall`
+. /usr/local/etc/postgresbackup
+OUTFILE="$OUTDIR/postgresqlDump"
 
 # parse cmdline
+while getopts "h?F:H:P:U:" OPT; do
+  case "$OPT" in
+  h|\?) usage
+     exit 0
+     ;;
+  F) OUTFILE=$OPTARG
+     ;;
+  H) HOST=$OPTARG
+     ;;
+  P) PORT=$OPTARG
+     ;;
+  U) USER=$OPTARG
+     ;;
+  *) usage
+     exit 1
+     ;;
+  esac
+done
+shift "$((OPTIND-1))"
 
-# set dump file name if not specified on cmdline
-if [ ":$OUTFILE:" == "::" ]; then 
-  OUTFILE="$OUTDIR/${type}Dump"
-fi
-
-# determine proper cmds & cmdline options
-case $TYPE in
-mysql)
-  DBCMD=`which mysql`
-  DBDUMP=`which mysqldump`
-  OPTS="-ANe"
-  SQL="SELECT schema_name FROM information_schema.schemata \
-    WHERE schema_name NOT IN \
-    ('mysql', 'information_schema', 'performance_schema')"
-  CONNECTION="-h $HOST -P $PORT -u $USER"
-  ;;
-postgres)
-  DBCMD=`which psql`
-  DBDUMP=`which pg_dump`
-  OPTS=""
-  CONNECTION="-h $HOST -p $PORT -U $USER"
-  SQL="SELECT schema_name FROM information_schema.schemata \
-    WHERE schema_name NOT IN \
-    ('mysql', 'information_schema', 'performance_schema')"
-  ;;
-*)
-  echo "Sorry; don't know that DB type."
-  exit 1
-esac
-
-# get list of databases to dump
-DBLIST=`${DBCMD} ${CONNECTION} ${OPTS}"${SQL}" | tr '\n' ' '`
+# set connection string
+CONNECTION="-h $HOST -p $PORT -U $USER"
 
 # create uncompressed dump file
-${DBDUMP} ${CONNECTION} --databases ${DBLIST} > ${OUTFILE}.${DAY}
-ls -l ${OUTFILE}.${DAY}
+${DBDUMP} ${CONNECTION} ${OPTS} > ${OUTFILE}.${DAY}
 
-# compress dump file, replaces file from 7 days ago
-rm ${OUTFILE}.${DAY}.bz2
-bzip2 ${OUTFILE}.${DAY}
+# compress dump file; overwrite file from 7 days ago
+bzip2 -f ${OUTFILE}.${DAY}
 ls -l ${OUTFILE}.${DAY}.bz2
 

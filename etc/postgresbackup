@@ -1,5 +1,5 @@
-TYPE="mysql"
 USER="backup"
 HOST="127.0.0.1"
 OUTDIR="/var/local/dbbackups"
+OPTS=""
 

@@ -13,7 +13,7 @@ if [ $DEBUG == "true" ]; then set -x; fi
 DAY=`date +%w`
 DBCMD=`which psql`
 DBDUMP=`which pg_dumpall`
-. /usr/local/etc/postgresbackup
+. /opt/dbbackup/etc/postgresbackup
 OUTFILE="$OUTDIR/postgresqlDump"
 
 # parse cmdline

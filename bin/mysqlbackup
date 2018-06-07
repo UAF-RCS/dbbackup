@@ -13,7 +13,7 @@ if [ $DEBUG == "true" ]; then set -x; fi
 DAY=`date +%w`
 DBCMD=`which mysql`
 DBDUMP=`which mysqldump`
-. /usr/local/etc/mysqlbackup
+. /opt/dbbackup/etc/mysqlbackup
 OUTFILE="$OUTDIR/mysqlDump"
 
 # parse cmdline

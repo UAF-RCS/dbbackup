@@ -1,5 +1,6 @@
 USER="backup"
 HOST="127.0.0.1"
+PORT="3306"
 OUTDIR="/var/local/dbbackups"
 OPTS="-Ne --all-databases"
 

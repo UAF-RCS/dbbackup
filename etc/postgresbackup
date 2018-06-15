@@ -1,5 +1,5 @@
 USER="postgres"
-HOST="127.0.0.1"
+HOST="/var/run/postgresql"
 PORT="5432"
 OUTDIR="/var/local/dbbackups"
 OPTS=""
